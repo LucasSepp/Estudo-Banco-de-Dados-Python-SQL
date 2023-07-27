@@ -1,0 +1,39 @@
+import sqlite3
+
+def criar_tabelas():
+    conn = sqlite3.connect('notas_fiscais.db')
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        CREATE TABLE Estado (
+            id_estado INTEGER PRIMARY KEY,
+            nome_estado TEXT NOT NULL
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE Cidade (
+            id_cidade INTEGER PRIMARY KEY,
+            nome_cidade TEXT NOT NULL,
+            id_estado INTEGER,
+            FOREIGN KEY (id_estado) REFERENCES Estado(id_estado)
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE Cliente (
+            id_cliente INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL,
+            cpf_cnpj TEXT NOT NULL,
+            endereco TEXT,
+            telefone TEXT,
+            id_cidade INTEGER,
+            FOREIGN KEY (id_cidade) REFERENCES Cidade(id_cidade)
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+if __name__ == '__main__':
+    criar_tabelas()

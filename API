@@ -1,0 +1,53 @@
+from flask import Flask, request, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+# Conectar ao banco de dados
+def get_db():
+    db = sqlite3.connect('notas_fiscais.db')
+    db.row_factory = sqlite3.Row
+    return db
+
+# Cliente por ID
+@app.route('/clientes/<int:cliente_id>', methods=['GET'])
+def get_cliente(cliente_id):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM Cliente WHERE id_cliente = ?", (cliente_id,))
+    cliente = cursor.fetchone()
+
+    conn.close()
+
+    if cliente:
+        cliente_dict = dict(cliente)
+        return jsonify(cliente_dict)
+    else:
+        return jsonify({'message': 'Cliente não encontrado'}), 404
+
+# Novo Cliente
+@app.route('/clientes', methods=['POST'])
+def criar_cliente():
+    data = request.get_json()
+    nome = data.get('nome')
+    cpf_cnpj = data.get('cpf_cnpj')
+    endereco = data.get('endereco')
+    telefone = data.get('telefone')
+    id_cidade = data.get('id_cidade')
+
+    if not nome or not cpf_cnpj or not endereco or not telefone or not id_cidade:
+        return jsonify({'message': 'Todos os campos são obrigatórios'}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("INSERT INTO Cliente (nome, cpf_cnpj, endereco, telefone, id_cidade) VALUES (?, ?, ?, ?, ?)",
+                   (nome, cpf_cnpj, endereco, telefone, id_cidade))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': 'Cliente criado com sucesso'}), 201
+
+if __name__ == '__main__':
+    app.run(debug=True)
